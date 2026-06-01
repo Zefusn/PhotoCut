@@ -183,7 +183,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// 退出局部视图，返回全局视图
+    /// 退出局部视图，返回全局视图并重新应用筛选
     /// </summary>
     public void ExitLocalView()
     {
@@ -192,13 +192,8 @@ public class MainViewModel : INotifyPropertyChanged
 
         foreach (var p in _allPhotos) p.IsSelected = false;
 
-        Photos.Clear();
-        foreach (var photo in _allPhotos)
-        {
-            Photos.Add(photo);
-        }
-        TotalCount = Photos.Count;
-        SelectedCount = 0;
+        // 重新应用当前筛选条件
+        ApplyFilters();
     }
 
     /// <summary>
