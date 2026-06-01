@@ -487,7 +487,7 @@ public sealed partial class MainWindow : Window
         _viewModel.EnterLocalView(_lastAreaSelected.ToList());
         _photoGridView.ItemsSource = _viewModel.Photos;
         _localBanner.Visibility = Visibility.Visible;
-        _localBannerText.Text = $"局部筛选 — {_lastAreaSelected.Count} 张（勾选要保留的）";
+        _localBannerText.Text = $"已选 {_lastAreaSelected.Count} 张 → 勾选保留项";
         _enterLocalBtn.Visibility = Visibility.Collapsed;
         _formatFilter.IsEnabled = false;
         _dateFilterBox.IsEnabled = false;
