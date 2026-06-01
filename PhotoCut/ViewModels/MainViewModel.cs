@@ -77,6 +77,18 @@ public class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<PhotoItem> Photos { get; } = new();
     private List<PhotoItem> _allPhotos = new();
 
+    // 框选区域模式
+    private bool _isInLocalView;
+    private List<PhotoItem> _areaSelectedPhotos = new();
+
+    public bool IsInLocalView
+    {
+        get => _isInLocalView;
+        set { _isInLocalView = value; OnPropertyChanged(); }
+    }
+
+    public int AreaSelectedCount => _areaSelectedPhotos.Count;
+
     public async Task LoadPhotosAsync()
     {
         if (string.IsNullOrEmpty(FolderPath)) return;
@@ -148,6 +160,79 @@ public class MainViewModel : INotifyPropertyChanged
 
         TotalCount = Photos.Count;
         UpdateSelectedCount();
+    }
+
+    /// <summary>
+    /// 进入局部视图：只显示框选的照片，取消所有勾选
+    /// </summary>
+    public void EnterLocalView(List<PhotoItem> areaPhotos)
+    {
+        _areaSelectedPhotos = areaPhotos;
+        IsInLocalView = true;
+
+        // 取消所有勾选
+        foreach (var p in _allPhotos) p.IsSelected = false;
+
+        Photos.Clear();
+        foreach (var photo in areaPhotos)
+        {
+            Photos.Add(photo);
+        }
+        TotalCount = Photos.Count;
+        SelectedCount = 0;
+    }
+
+    /// <summary>
+    /// 退出局部视图，返回全局视图
+    /// </summary>
+    public void ExitLocalView()
+    {
+        IsInLocalView = false;
+        _areaSelectedPhotos.Clear();
+
+        foreach (var p in _allPhotos) p.IsSelected = false;
+
+        Photos.Clear();
+        foreach (var photo in _allPhotos)
+        {
+            Photos.Add(photo);
+        }
+        TotalCount = Photos.Count;
+        SelectedCount = 0;
+    }
+
+    /// <summary>
+    /// 删除局部视图中未勾选（未保留）的照片
+    /// </summary>
+    public async Task DeleteUnretainedAsync()
+    {
+        var toDeleteItems = Photos.Where(p => !p.IsSelected).ToList();
+        if (toDeleteItems.Count == 0) return;
+
+        var toDeletePaths = new HashSet<string>();
+        foreach (var photo in toDeleteItems)
+        {
+            toDeletePaths.Add(photo.FilePath);
+            if (!string.IsNullOrEmpty(photo.PairedFilePath))
+                toDeletePaths.Add(photo.PairedFilePath);
+        }
+
+        var results = await _fileService.DeleteFilesAsync(toDeletePaths.ToList(), true);
+
+        foreach (var deleted in results)
+        {
+            var item = Photos.FirstOrDefault(p => p.FilePath == deleted);
+            if (item != null) Photos.Remove(item);
+
+            item = _allPhotos.FirstOrDefault(p => p.FilePath == deleted);
+            if (item != null) _allPhotos.Remove(item);
+
+            item = _areaSelectedPhotos.FirstOrDefault(p => p.FilePath == deleted);
+            if (item != null) _areaSelectedPhotos.Remove(item);
+        }
+
+        TotalCount = Photos.Count;
+        SelectedCount = 0;
     }
 
     public void SelectAllItems()

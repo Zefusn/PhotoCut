@@ -30,6 +30,7 @@ public enum DeleteMode
 public class PhotoItem : INotifyPropertyChanged
 {
     private bool _isSelected;
+    private bool _isAreaSelected;
     private ImageSource? _thumbnail;
 
     public string FilePath { get; set; } = string.Empty;
@@ -51,6 +52,19 @@ public class PhotoItem : INotifyPropertyChanged
             if (_isSelected != value)
             {
                 _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool IsAreaSelected
+    {
+        get => _isAreaSelected;
+        set
+        {
+            if (_isAreaSelected != value)
+            {
+                _isAreaSelected = value;
                 OnPropertyChanged();
             }
         }
